@@ -9,6 +9,7 @@ pipeline {
       CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
       GIT_USERNAME      = "$GIT_CREDS_USR"
       GIT_API_TOKEN     = "$GIT_CREDS_PSW"
+      CI                = 'true'
     }
     stages {
       stage('CI Build and push snapshot') {

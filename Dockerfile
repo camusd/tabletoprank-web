@@ -4,4 +4,6 @@ EXPOSE 8080
 RUN yarn global add serve
 WORKDIR /usr/src/app
 COPY . .
-CMD ["serve", "-p 8080", "-s", "."]
+RUN yarn install
+RUN yarn build
+CMD ["serve", "-p 8080", "-s", "build"]

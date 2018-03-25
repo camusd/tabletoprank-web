@@ -3,8 +3,8 @@
 # Declare variables to be passed into your templates.
 replicaCount: 1
 image:
-  repository: draft
-  tag: dev
+  repository: 10.11.252.229:5000/jenkinsx/tabletoprank-web
+  tag: 0.0.15
   pullPolicy: IfNotPresent
 service:
   name: tabletoprank-web

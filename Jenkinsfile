@@ -4,7 +4,7 @@ pipeline {
     }
     environment {
       ORG               = 'jenkinsx'
-      APP_NAME          = 'web'
+      APP_NAME          = 'tabletoprank-web'
       GIT_CREDS         = credentials('jenkins-x-git')
       CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
       GIT_USERNAME      = "$GIT_CREDS_USR"
@@ -51,7 +51,7 @@ pipeline {
             // so we can retrieve the version in later steps
             sh "echo \$(jx-release-version) > VERSION"
           }
-          dir ('./charts/web') {
+          dir ('./charts/tabletoprank-web') {
             container('nodejs') {
               sh "make tag"
             }
@@ -70,7 +70,7 @@ pipeline {
           branch 'master'
         }
         steps {
-          dir ('./charts/web') {
+          dir ('./charts/tabletoprank-web') {
             container('nodejs') {
               sh 'jx step changelog --version \$(cat ../../VERSION)'
 

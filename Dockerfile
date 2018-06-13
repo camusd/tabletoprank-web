@@ -1,9 +1,16 @@
-FROM node:9-slim
+FROM node:alpine AS builder
+WORKDIR /usr/src/app
+ENV PATH /usr/src/app/node_modules/.bin:$PATH
+COPY package.json /usr/src/app/package.json
+RUN yarn install
+RUN yarn global add react-scripts
+COPY . /usr/src/app
+RUN yarn run build
+
+FROM nginx:alpine
+RUN rm -rf /etc/nginx/conf.d
+COPY conf /etc/nginx
+COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 ENV PORT 8080
 EXPOSE 8080
-RUN yarn global add serve
-WORKDIR /usr/src/app
-COPY . .
-RUN yarn install
-RUN yarn build
-CMD ["serve", "-p 8080", "-s", "build"]
+CMD ["nginx", "-g", "daemon off;"]

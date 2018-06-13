@@ -13,12 +13,13 @@ service:
   internalPort: 8080
   annotations:
     fabric8.io/expose: "true"
+    fabric8.io/ingress.annotations: "kubernetes.io/ingress.class: nginx"
 resources:
   limits:
-    cpu: 100m
+    cpu: 400m
     memory: 256Mi
   requests:
-    cpu: 80m
+    cpu: 200m
     memory: 128Mi
 probePath: /
 livenessProbe:

@@ -3,13 +3,9 @@ pipeline {
         label "jenkins-nodejs"
     }
     environment {
-      ORG               = 'jenkinsx'
-      APP_NAME          = 'tabletoprank-web'
-      GIT_CREDS         = credentials('jenkins-x-git')
+      ORG               = 'camusd'
+      APP_NAME          = 'web'
       CHARTMUSEUM_CREDS = credentials('jenkins-x-chartmuseum')
-      GIT_USERNAME      = "$GIT_CREDS_USR"
-      GIT_API_TOKEN     = "$GIT_CREDS_PSW"
-      CI                = 'true'
     }
     stages {
       stage('CI Build and push snapshot') {
@@ -24,10 +20,12 @@ pipeline {
         steps {
           container('nodejs') {
             sh "npm install"
-            sh "npm test"
+            sh "CI=true DISPLAY=:99 npm test"
 
-            sh "docker build -t \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:$PREVIEW_VERSION ."
-            sh "docker push \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:$PREVIEW_VERSION"
+            sh 'export VERSION=$PREVIEW_VERSION && skaffold run -f skaffold.yaml'
+
+            sh "jx step validate --min-jx-version 1.2.36"
+            sh "jx step post build --image \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:$PREVIEW_VERSION"
           }
 
           dir ('./charts/preview') {
@@ -46,22 +44,24 @@ pipeline {
           container('nodejs') {
             // ensure we're not on a detached head
             sh "git checkout master"
-            // until we switch to the new kubernetes / jenkins credential implementation use git credentials store
             sh "git config --global credential.helper store"
+            sh "jx step validate --min-jx-version 1.1.73"
+            sh "jx step git credentials"
             // so we can retrieve the version in later steps
             sh "echo \$(jx-release-version) > VERSION"
           }
-          dir ('./charts/tabletoprank-web') {
+          dir ('./charts/web') {
             container('nodejs') {
               sh "make tag"
             }
           }
           container('nodejs') {
             sh "npm install"
-            sh "npm test"
+            sh "CI=true DISPLAY=:99 npm test"
 
-            sh "docker build -t \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:\$(cat VERSION) ."
-            sh "docker push \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:\$(cat VERSION)"
+            sh 'export VERSION=`cat VERSION` && skaffold run -f skaffold.yaml'
+            sh "jx step validate --min-jx-version 1.2.36"
+            sh "jx step post build --image \$JENKINS_X_DOCKER_REGISTRY_SERVICE_HOST:\$JENKINS_X_DOCKER_REGISTRY_SERVICE_PORT/$ORG/$APP_NAME:\$(cat VERSION)"
           }
         }
       }
@@ -70,9 +70,9 @@ pipeline {
           branch 'master'
         }
         steps {
-          dir ('./charts/tabletoprank-web') {
+          dir ('./charts/web') {
             container('nodejs') {
-              sh 'jx step changelog --version \$(cat ../../VERSION)'
+              sh 'jx step changelog --version v\$(cat ../../VERSION)'
 
               // release the helm chart
               sh 'make release'

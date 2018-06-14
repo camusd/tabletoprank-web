@@ -12,5 +12,4 @@ RUN rm -rf /etc/nginx/conf.d
 COPY conf /etc/nginx
 COPY --from=builder /usr/src/app/build /usr/share/nginx/html
 ENV PORT 8080
-EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
